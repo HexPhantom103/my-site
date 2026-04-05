@@ -1,0 +1,764 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>QuizMind | Умные викторины для школьников</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at 10% 20%, #0a0f1e, #03050b);
+            color: #f0f3fa;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e2a3a;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4c9aff;
+            border-radius: 10px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.6s ease;
+        }
+        .header h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #a0e9ff, #6b8cff, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            font-size: 1.2rem;
+            color: #b9d0f0;
+            margin-top: 0.3rem;
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.8rem;
+            margin: 2rem 0 3rem;
+        }
+
+        .subject-card {
+            background: rgba(20, 30, 45, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            cursor: pointer;
+        }
+        .subject-card:hover {
+            transform: translateY(-8px);
+            border-color: #4c9aff;
+            box-shadow: 0 20px 35px -12px #0f172a;
+            background: rgba(30, 45, 65, 0.85);
+        }
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        .subject-card h3 {
+            font-size: 1.8rem;
+            margin: 0.5rem 0;
+            font-weight: 600;
+        }
+        .start-btn {
+            background: linear-gradient(95deg, #3b82f6, #8b5cf6);
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 3rem;
+            font-weight: bold;
+            font-size: 1rem;
+            color: white;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .start-btn:hover {
+            transform: scale(0.96);
+            filter: brightness(1.05);
+        }
+
+        .quiz-panel {
+            background: rgba(12, 20, 30, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 2rem;
+            padding: 2rem;
+            border: 1px solid rgba(76, 154, 255, 0.3);
+            margin: 1rem 0;
+            animation: fadeScale 0.3s ease;
+        }
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #2d3e5a;
+        }
+        .quiz-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #9bc0ff;
+        }
+        .question-counter {
+            background: #1e2a3a;
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+        }
+        .question-text {
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin: 1.2rem 0 2rem;
+            line-height: 1.4;
+        }
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .option {
+            background: #0f172a;
+            border: 1.5px solid #2d3e5a;
+            border-radius: 1.5rem;
+            padding: 1rem 1.2rem;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #eef5ff;
+            font-weight: 500;
+        }
+        .option:hover:not(.disabled) {
+            background: #1e2a3a;
+            border-color: #4c9aff;
+            transform: translateX(8px);
+        }
+        .correct {
+            background: #15803d !important;
+            border-color: #4ade80 !important;
+            animation: pulseGreen 0.3s ease;
+        }
+        .wrong {
+            background: #b91c1c !important;
+            border-color: #f87171 !important;
+            animation: shake 0.2s ease;
+        }
+        .disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+        .quiz-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        .btn-next, .btn-home {
+            padding: 0.8rem 2rem;
+            border-radius: 3rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-next {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-next:hover {
+            background: #2563eb;
+            transform: scale(0.97);
+        }
+        .btn-home {
+            background: #334155;
+            color: #e2e8f0;
+        }
+        .btn-home:hover {
+            background: #1e293b;
+        }
+        .result-box {
+            text-align: center;
+            padding: 2rem;
+        }
+        .result-score {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #facc15;
+        }
+        .testimonials {
+            margin: 3rem 0 2rem;
+        }
+        .testimonials h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #b9d0f0;
+        }
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+        .testimonial {
+            background: rgba(20, 30, 45, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            border-left: 4px solid #4c9aff;
+            transition: 0.2s;
+        }
+        .testimonial p {
+            font-style: italic;
+            color: #cbd5e6;
+        }
+        .testimonial .author {
+            margin-top: 0.7rem;
+            font-weight: 600;
+            color: #90cdf4;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        @keyframes fadeScale {
+            from { opacity: 0; transform: scale(0.96);}
+            to { opacity: 1; transform: scale(1);}
+        }
+        @keyframes pulseGreen {
+            0% { transform: scale(1); background: #15803d; }
+            50% { transform: scale(1.02); background: #22c55e; }
+            100% { transform: scale(1); background: #15803d; }
+        }
+        @keyframes shake {
+            0%,100% { transform: translateX(0);}
+            25% { transform: translateX(-5px);}
+            75% { transform: translateX(5px);}
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 1rem; }
+            .question-text { font-size: 1.3rem; }
+            .header h1 { font-size: 2.2rem; }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎓 QuizMind</h1>
+        <p>🧠 Твой умный тренажёр — 10 предметов, 200 вопросов</p>
+    </div>
+
+    <div id="mainMenu">
+        <div class="subjects-grid" id="subjectsGrid"></div>
+        <div class="testimonials">
+            <h2>💬 Что говорят наши ученики</h2>
+            <div class="testimonial-grid" id="testimonialsList"></div>
+        </div>
+    </div>
+
+    <div id="quizArea" class="hidden"></div>
+
+    <footer>✨ Учись с удовольствием — каждый вопрос прокачивает интеллект</footer>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // БАЗА ВОПРОСОВ: 10 предметов × 20 вопросов (средний / чуть выше)
+    // Каждый вопрос: текст, правильный ответ, массив неправильных
+    // --------------------------------------------------------------
+    const subjectsData = {};
+
+    function makeQ(questionText, correct, wrongArray) {
+        return { text: questionText, correct: correct, wrong: wrongArray };
+    }
+
+    // ---------- МАТЕМАТИКА ----------
+    let mathQs = [];
+    mathQs.push(makeQ("Чему равна сумма углов треугольника?", "180°", ["90°", "360°", "270°"]));
+    mathQs.push(makeQ("Корень уравнения 3x - 7 = 14", "7", ["5", "8", "6"]));
+    mathQs.push(makeQ("Значение выражения 2³ + 3²", "17", ["13", "15", "19"]));
+    mathQs.push(makeQ("Как называется число, которое делится только на 1 и на себя?", "Простое", ["Составное", "Чётное", "Кратное"]));
+    mathQs.push(makeQ("Площадь квадрата со стороной 5 см", "25 см²", ["20 см²", "10 см²", "15 см²"]));
+    mathQs.push(makeQ("Чему равен 10% от 250?", "25", ["20", "30", "15"]));
+    mathQs.push(makeQ("Результат деления 144 на 12", "12", ["10", "14", "16"]));
+    mathQs.push(makeQ("Наибольший общий делитель чисел 24 и 36", "12", ["6", "18", "24"]));
+    mathQs.push(makeQ("Сколько минут в трёх часах?", "180", ["120", "150", "200"]));
+    mathQs.push(makeQ("Если a = 4, b = 3, то a² + b² = ?", "25", ["24", "20", "18"]));
+    mathQs.push(makeQ("Какая дробь равна 0,75?", "3/4", ["1/2", "2/3", "4/5"]));
+    mathQs.push(makeQ("Сколько граней у куба?", "6", ["4", "8", "12"]));
+    mathQs.push(makeQ("Упростите: 2x + 3x - x", "4x", ["5x", "6x", "3x"]));
+    mathQs.push(makeQ("Какой знак сравнения: -5 ___ -3", "<", [">", "=", "≤"]));
+    mathQs.push(makeQ("Периметр прямоугольника 6 см и 4 см", "20 см", ["24 см", "10 см", "12 см"]));
+    mathQs.push(makeQ("Значение √64", "8", ["6", "7", "9"]));
+    mathQs.push(makeQ("Сколько нулей в числе один миллион?", "6", ["5", "7", "4"]));
+    mathQs.push(makeQ("Какое число является противоположным числу -7?", "7", ["-7", "0", "14"]));
+    mathQs.push(makeQ("Если сегодня понедельник, какой день будет через 10 дней?", "Четверг", ["Среда", "Пятница", "Вторник"]));
+    mathQs.push(makeQ("Результат: 5! (факториал 5)", "120", ["60", "100", "24"]));
+    subjectsData["Математика"] = mathQs;
+
+    // ---------- ГЕОМЕТРИЯ ----------
+    let geomQs = [];
+    geomQs.push(makeQ("Сколько сторон у шестиугольника?", "6", ["5", "7", "8"]));
+    geomQs.push(makeQ("Формула площади круга", "πr²", ["2πr", "πd", "πr"]));
+    geomQs.push(makeQ("Как называются прямые, которые не пересекаются?", "Параллельные", ["Перпендикулярные", "Скрещивающиеся", "Смежные"]));
+    geomQs.push(makeQ("У какого треугольника все стороны равны?", "Равносторонний", ["Равнобедренный", "Прямоугольный", "Тупоугольный"]));
+    geomQs.push(makeQ("Диаметр окружности 10 см. Чему равен радиус?", "5 см", ["10 см", "20 см", "2.5 см"]));
+    geomQs.push(makeQ("Сумма смежных углов равна", "180°", ["90°", "360°", "270°"]));
+    geomQs.push(makeQ("Прямой угол — это угол ...", "90°", ["45°", "60°", "180°"]));
+    geomQs.push(makeQ("Объём куба с ребром 3 см", "27 см³", ["9 см³", "18 см³", "36 см³"]));
+    geomQs.push(makeQ("Какая фигура имеет 4 равных угла и 4 равные стороны?", "Квадрат", ["Ромб", "Прямоугольник", "Трапеция"]));
+    geomQs.push(makeQ("Радиус окружности 4 см. Длина окружности (π≈3.14)", "25.12 см", ["12.56 см", "50.24 см", "6.28 см"]));
+    geomQs.push(makeQ("Сколько осей симметрии у квадрата?", "4", ["2", "6", "8"]));
+    geomQs.push(makeQ("В треугольнике два угла по 45°. Третий угол равен:", "90°", ["45°", "60°", "30°"]));
+    geomQs.push(makeQ("Как называется отрезок, соединяющий центр окружности с точкой на окружности?", "Радиус", ["Хорда", "Диаметр", "Дуга"]));
+    geomQs.push(makeQ("Площадь прямоугольника 24 см², ширина 4 см. Длина равна:", "6 см", ["8 см", "5 см", "12 см"]));
+    geomQs.push(makeQ("Угол, больший 90° но меньший 180°, называется", "Тупой", ["Острый", "Прямой", "Развёрнутый"]));
+    geomQs.push(makeQ("Сколько вершин у пятиугольной пирамиды?", "6", ["5", "7", "8"]));
+    geomQs.push(makeQ("Линия, которая делит угол пополам", "Биссектриса", ["Медиана", "Высота", "Диагональ"]));
+    geomQs.push(makeQ("Площадь треугольника со сторонами 3,4,5 (прямоугольного)", "6", ["12", "10", "8"]));
+    geomQs.push(makeQ("Как называется фигура, у которой только одна пара параллельных сторон?", "Трапеция", ["Параллелограмм", "Ромб", "Прямоугольник"]));
+    geomQs.push(makeQ("Число π приблизительно равно", "3.14", ["3.12", "3.16", "3.18"]));
+    subjectsData["Геометрия"] = geomQs;
+
+    // ---------- ФИЗИКА ----------
+    let physQs = [];
+    physQs.push(makeQ("Единица измерения силы", "Ньютон", ["Джоуль", "Ватт", "Паскаль"]));
+    physQs.push(makeQ("Закон, описывающий падение тел", "Закон всемирного тяготения", ["Закон Ома", "Закон Архимеда", "Закон сохранения"]));
+    physQs.push(makeQ("Скорость света в вакууме (приблизительно)", "300 000 км/с", ["150 000 км/с", "3 000 км/с", "30 000 км/с"]));
+    physQs.push(makeQ("Прибор для измерения напряжения", "Вольтметр", ["Амперметр", "Омметр", "Манометр"]));
+    physQs.push(makeQ("Какая сила удерживает планеты на орбитах?", "Гравитация", ["Магнетизм", "Электричество", "Трение"]));
+    physQs.push(makeQ("Единица измерения частоты", "Герц", ["Ватт", "Ньютон", "Кулон"]));
+    physQs.push(makeQ("Какое явление объясняет радугу?", "Дисперсия света", ["Отражение", "Преломление", "Интерференция"]));
+    physQs.push(makeQ("Формула кинетической энергии", "mv²/2", ["mgh", "ma", "F/S"]));
+    physQs.push(makeQ("Как называется переход вещества из твёрдого в газообразное?", "Сублимация", ["Конденсация", "Испарение", "Плавление"]));
+    physQs.push(makeQ("Какая частица имеет положительный заряд?", "Протон", ["Электрон", "Нейтрон", "Ион"]));
+    physQs.push(makeQ("Закон Ома для участка цепи: U = I * ...", "R", ["P", "A", "t"]));
+    physQs.push(makeQ("Архимедова сила зависит от ...", "Плотности жидкости", ["Массы тела", "Формы тела", "Температуры"]));
+    physQs.push(makeQ("Какой прибор измеряет атмосферное давление?", "Барометр", ["Термометр", "Гигрометр", "Спидометр"]));
+    physQs.push(makeQ("Энергия, которой обладает тело в результате движения", "Кинетическая", ["Потенциальная", "Внутренняя", "Механическая"]));
+    physQs.push(makeQ("Сколько цветов в радуге?", "7", ["6", "8", "5"]));
+    physQs.push(makeQ("Звук не распространяется в ...", "Вакууме", ["Воде", "Воздухе", "Металле"]));
+    physQs.push(makeQ("Кто открыл закон инерции?", "Ньютон", ["Галилей", "Эйнштейн", "Архимед"]));
+    physQs.push(makeQ("Единица измерения мощности", "Ватт", ["Джоуль", "Ньютон", "Паскаль"]));
+    physQs.push(makeQ("Какая линза собирает свет?", "Выпуклая", ["Вогнутая", "Плоская", "Рассеивающая"]));
+    physQs.push(makeQ("Как называется явление сохранения скорости при отсутствии сил?", "Инерция", ["Трение", "Масса", "Импульс"]));
+    subjectsData["Физика"] = physQs;
+
+    // ---------- ХИМИЯ ----------
+    let chemQs = [];
+    chemQs.push(makeQ("Химический символ кислорода", "O", ["O₂", "K", "H"]));
+    chemQs.push(makeQ("Формула воды", "H₂O", ["CO₂", "H₂O₂", "NaCl"]));
+    chemQs.push(makeQ("Кислота, содержащаяся в лимоне", "Лимонная", ["Уксусная", "Соляная", "Серная"]));
+    chemQs.push(makeQ("Какой газ выделяется при горении?", "Углекислый газ", ["Кислород", "Азот", "Водород"]));
+    chemQs.push(makeQ("Нейтральный pH равен", "7", ["0", "14", "5"]));
+    chemQs.push(makeQ("Металл, который жидкий при комнатной температуре", "Ртуть", ["Железо", "Алюминий", "Золото"]));
+    chemQs.push(makeQ("Самый распространённый элемент во Вселенной", "Водород", ["Гелий", "Кислород", "Углерод"]));
+    chemQs.push(makeQ("Какой процесс — превращение жидкости в пар?", "Испарение", ["Конденсация", "Сублимация", "Кристаллизация"]));
+    chemQs.push(makeQ("Химическая формула поваренной соли", "NaCl", ["KCl", "CaCO₃", "NaOH"]));
+    chemQs.push(makeQ("Какой газ используется для наполнения воздушных шаров?", "Гелий", ["Кислород", "Азот", "Водород"]));
+    chemQs.push(makeQ("Отрицательно заряженный ион называется", "Анион", ["Катион", "Протон", "Электрон"]));
+    chemQs.push(makeQ("Какой элемент обозначается буквой 'Fe'?", "Железо", ["Фтор", "Фосфор", "Франций"]));
+    chemQs.push(makeQ("Вещества, состоящие из двух разных атомов, называются", "Соединения", ["Смеси", "Элементы", "Кристаллы"]));
+    chemQs.push(makeQ("Как называют реакцию между кислотой и основанием?", "Нейтрализация", ["Окисление", "Гидратация", "Диссоциация"]));
+    chemQs.push(makeQ("Самый твёрдый природный минерал", "Алмаз", ["Кварц", "Графит", "Корунд"]));
+    chemQs.push(makeQ("Как называется таблица химических элементов?", "Периодическая система Менделеева", ["Таблица растворимости", "Ряд активности", "Шкала pH"]));
+    chemQs.push(makeQ("Какая формула у углекислого газа?", "CO₂", ["CO", "C₂O", "CH₄"]));
+    chemQs.push(makeQ("Кислород при нормальных условиях — это ...", "Газ", ["Жидкость", "Твёрдое тело", "Плазма"]));
+    chemQs.push(makeQ("Какой металл самый лёгкий?", "Литий", ["Алюминий", "Магний", "Натрий"]));
+    chemQs.push(makeQ("Какая кислота содержится в желудке?", "Соляная", ["Серная", "Азотная", "Уксусная"]));
+    subjectsData["Химия"] = chemQs;
+
+    // ---------- БИОЛОГИЯ ----------
+    let bioQs = [];
+    bioQs.push(makeQ("Орган, который перекачивает кровь", "Сердце", ["Лёгкие", "Печень", "Почки"]));
+    bioQs.push(makeQ("Какое растение относится к хвойным?", "Ель", ["Ромашка", "Дуб", "Берёза"]));
+    bioQs.push(makeQ("Сколько костей у взрослого человека (приблизительно)?", "206", ["200", "150", "250"]));
+    bioQs.push(makeQ("Где происходит фотосинтез?", "В листьях", ["В корнях", "В стебле", "В цветах"]));
+    bioQs.push(makeQ("Самая большая клетка в организме человека", "Яйцеклетка", ["Нейрон", "Эритроцит", "Сперматозоид"]));
+    bioQs.push(makeQ("Как называются организмы, которые сами производят пищу?", "Автотрофы", ["Гетеротрофы", "Сапрофиты", "Паразиты"]));
+    bioQs.push(makeQ("Какая птица не умеет летать?", "Страус", ["Воробей", "Орёл", "Ласточка"]));
+    bioQs.push(makeQ("Какой витамин вырабатывается на солнце?", "D", ["A", "C", "B12"]));
+    bioQs.push(makeQ("Самый большой орган человека", "Кожа", ["Печень", "Лёгкие", "Кишечник"]));
+    bioQs.push(makeQ("К какой группе относятся лягушки?", "Земноводные", ["Пресмыкающиеся", "Рыбы", "Млекопитающие"]));
+    bioQs.push(makeQ("Что такое ДНК?", "Носитель наследственной информации", ["Белковое вещество", "Углевод", "Жир"]));
+    bioQs.push(makeQ("Как называется процесс поглощения кислорода клетками?", "Дыхание", ["Фотосинтез", "Брожение", "Гликолиз"]));
+    bioQs.push(makeQ("Где расположен гипофиз?", "В мозге", ["В сердце", "В печени", "В желудке"]));
+    bioQs.push(makeQ("Какое животное самое высокое?", "Жираф", ["Слон", "Верблюд", "Тигр"]));
+    bioQs.push(makeQ("Что такое хлорофилл?", "Зелёный пигмент", ["Красный пигмент", "Витамин", "Гормон"]));
+    bioQs.push(makeQ("Как называется наука о грибах?", "Микология", ["Ботаника", "Зоология", "Экология"]));
+    bioQs.push(makeQ("Сколько камер в сердце человека?", "4", ["2", "3", "5"]));
+    bioQs.push(makeQ("Какое животное может регенерировать хвост?", "Ящерица", ["Змея", "Крокодил", "Черепаха"]));
+    bioQs.push(makeQ("Кто открыл пенициллин?", "Флеминг", ["Пастер", "Мечников", "Дарвин"]));
+    bioQs.push(makeQ("Какая кислота содержится в муравьях?", "Муравьиная", ["Уксусная", "Лимонная", "Яблочная"]));
+    subjectsData["Биология"] = bioQs;
+
+    // ---------- ГЕОГРАФИЯ ----------
+    let geoQs = [];
+    geoQs.push(makeQ("Самая длинная река в мире", "Нил", ["Амазонка", "Янцзы", "Миссисипи"]));
+    geoQs.push(makeQ("Самая высокая гора", "Эверест", ["Килиманджаро", "Эльбрус", "Мак-Кинли"]));
+    geoQs.push(makeQ("Как называется материк, где находится Россия?", "Евразия", ["Африка", "Северная Америка", "Австралия"]));
+    geoQs.push(makeQ("Столица Франции", "Париж", ["Лондон", "Берлин", "Мадрид"]));
+    geoQs.push(makeQ("Какое море не имеет берегов?", "Саргассово", ["Карибское", "Средиземное", "Мёртвое"]));
+    geoQs.push(makeQ("Самый большой океан", "Тихий", ["Атлантический", "Индийский", "Северный Ледовитый"]));
+    geoQs.push(makeQ("Какое озеро самое глубокое?", "Байкал", ["Виктория", "Верхнее", "Танганьика"]));
+    geoQs.push(makeQ("Какой пустыне принадлежит название 'Каракумы'?", "Туркменистан", ["Казахстан", "Узбекистан", "Монголия"]));
+    geoQs.push(makeQ("Самый маленький материк", "Австралия", ["Антарктида", "Европа", "Южная Америка"]));
+    geoQs.push(makeQ("Какая страна занимает целый континент?", "Австралия", ["Россия", "Канада", "США"]));
+    geoQs.push(makeQ("Какие горы разделяют Европу и Азию?", "Уральские", ["Альпы", "Кавказ", "Гималаи"]));
+    geoQs.push(makeQ("Как называется самая жаркая пустыня?", "Сахара", ["Гоби", "Атакама", "Калахари"]));
+    geoQs.push(makeQ("В какой стране находится город Киото?", "Япония", ["Китай", "Корея", "Вьетнам"]));
+    geoQs.push(makeQ("Какое государство является родиной футбола?", "Англия", ["Бразилия", "Италия", "Германия"]));
+    geoQs.push(makeQ("Самый густонаселённый город мира?", "Токио", ["Дели", "Шанхай", "Мехико"]));
+    geoQs.push(makeQ("Как называется ветер, меняющий направление дважды в год?", "Муссон", ["Бриз", "Пассат", "Торнадо"]));
+    geoQs.push(makeQ("Что такое архипелаг?", "Группа островов", ["Полуостров", "Пролив", "Залив"]));
+    geoQs.push(makeQ("Самая низкая точка суши", "Мёртвое море", ["Впадина Долина Смерти", "Байкал", "Каспийское море"]));
+    geoQs.push(makeQ("Какая страна производит больше всего кофе?", "Бразилия", ["Вьетнам", "Колумбия", "Эфиопия"]));
+    geoQs.push(makeQ("Столица Египта", "Каир", ["Александрия", "Луксор", "Дамаск"]));
+    subjectsData["География"] = geoQs;
+
+    // ---------- ИНФОРМАТИКА ----------
+    let csQs = [];
+    csQs.push(makeQ("Что обозначает аббревиатура 'ПК'?", "Персональный компьютер", ["Программный код", "Печатный кабель", "Портал знаний"]));
+    csQs.push(makeQ("Сколько бит в одном байте?", "8", ["4", "16", "2"]));
+    csQs.push(makeQ("Какая операционная система создана Microsoft?", "Windows", ["Linux", "macOS", "Android"]));
+    csQs.push(makeQ("Что такое 'браузер'?", "Программа для просмотра сайтов", ["Поисковая система", "Антивирус", "Текстовый редактор"]));
+    csQs.push(makeQ("Какое расширение у текстового файла?", ".txt", [".exe", ".jpg", ".mp3"]));
+    csQs.push(makeQ("Что делает клавиша Ctrl+C?", "Копировать", ["Вставить", "Вырезать", "Сохранить"]));
+    csQs.push(makeQ("Кто основал компанию Microsoft?", "Билл Гейтс", ["Стив Джобс", "Марк Цукерберг", "Павел Дуров"]));
+    csQs.push(makeQ("Что такое алгоритм?", "Последовательность действий", ["Язык программирования", "Устройство", "Файл"]));
+    csQs.push(makeQ("Сколько мегабайт в гигабайте?", "1024", ["1000", "512", "2048"]));
+    csQs.push(makeQ("Какая программа используется для создания таблиц?", "Excel", ["Word", "PowerPoint", "Access"]));
+    csQs.push(makeQ("Как называется всемирная сеть?", "Интернет", ["Интранет", "Экстранет", "Локальная сеть"]));
+    csQs.push(makeQ("Что такое 'пиксель'?", "Точка экрана", ["Цвет", "Шрифт", "Разрешение"]));
+    csQs.push(makeQ("Какой язык программирования часто используют для веб-страниц?", "JavaScript", ["Python", "C++", "Java"]));
+    csQs.push(makeQ("Какое устройство выводит информацию на бумагу?", "Принтер", ["Монитор", "Сканер", "Клавиатура"]));
+    csQs.push(makeQ("Что такое 'вирус' в компьютере?", "Вредоносная программа", ["Ошибка", "Обновление", "Драйвер"]));
+    csQs.push(makeQ("Какая клавиша используется для входа в BIOS?", "Del (или F2)", ["F1", "Esc", "Tab"]));
+    csQs.push(makeQ("Что означает аббревиатура 'RAM'?", "Оперативная память", ["ПЗУ", "Кэш", "Регистр"]));
+    csQs.push(makeQ("Какая поисковая система самая популярная?", "Google", ["Bing", "Yandex", "DuckDuckGo"]));
+    csQs.push(makeQ("Что такое URL?", "Адрес веб-страницы", ["Язык разметки", "Протокол", "Сервер"]));
+    csQs.push(makeQ("Как называется главный микросхемный компьютер?", "Процессор", ["Материнская плата", "Видеокарта", "Блок питания"]));
+    subjectsData["Информатика"] = csQs;
+
+    // ---------- АНГЛИЙСКИЙ ----------
+    let engQs = [];
+    engQs.push(makeQ("Перевод слова 'apple'", "яблоко", ["апельсин", "груша", "банан"]));
+    engQs.push(makeQ("Как будет 'книга' по-английски?", "book", ["pen", "table", "chair"]));
+    engQs.push(makeQ("Какое время используется для действий в настоящем?", "Present Simple", ["Past Simple", "Future Simple", "Present Continuous"]));
+    engQs.push(makeQ("Как правильно: 'I ___ to school every day'", "go", ["goes", "going", "went"]));
+    engQs.push(makeQ("Синоним слова 'big'", "large", ["small", "tiny", "little"]));
+    engQs.push(makeQ("Что означает фраза 'break a leg'?", "Удачи", ["Сломать ногу", "Быстро бежать", "Остановиться"]));
+    engQs.push(makeQ("Какой предлог: 'I wake up ___ 7 am'", "at", ["in", "on", "for"]));
+    engQs.push(makeQ("Форма прошедшего времени глагола 'go'", "went", ["gone", "goed", "going"]));
+    engQs.push(makeQ("Как сказать 'спасибо' по-английски?", "Thank you", ["Please", "Sorry", "Hello"]));
+    engQs.push(makeQ("Какое слово является антонимом 'hot'?", "cold", ["warm", "cool", "dry"]));
+    engQs.push(makeQ("Как будет 'машина'?", "car", ["bus", "train", "plane"]));
+    engQs.push(makeQ("Выберите правильное: 'She ___ to music now'", "is listening", ["listens", "listen", "listened"]));
+    engQs.push(makeQ("Какое слово обозначает 'прекрасный'?", "beautiful", ["ugly", "bad", "sad"]));
+    engQs.push(makeQ("Как спросить 'Как дела?'", "How are you?", ["What's up?", "Where are you?", "Who are you?"]));
+    engQs.push(makeQ("Множественное число 'child'", "children", ["childs", "childes", "childern"]));
+    engQs.push(makeQ("Что означает 'library'?", "библиотека", ["книжный магазин", "школа", "музей"]));
+    engQs.push(makeQ("Как сказать 'Я люблю тебя'", "I love you", ["I like you", "I hate you", "I miss you"]));
+    engQs.push(makeQ("Какой месяц 'January'?", "январь", ["февраль", "март", "декабрь"]));
+    engQs.push(makeQ("Выберите правильный артикль: '___ orange'", "an", ["a", "the", "no article"]));
+    engQs.push(makeQ("Что значит 'computer'?", "компьютер", ["телефон", "планшет", "ноутбук"]));
+    subjectsData["Английский язык"] = engQs;
+
+    // ---------- РУССКИЙ ЯЗЫК ----------
+    let rusQs = [];
+    rusQs.push(makeQ("Сколько букв в русском алфавите?", "33", ["32", "34", "31"]));
+    rusQs.push(makeQ("Какое слово пишется с буквой 'Ё'?", "ёж", ["еж", "йож", "ож"]));
+    rusQs.push(makeQ("Какой падеж отвечает на вопрос 'кого? что?'", "Винительный", ["Родительный", "Дательный", "Творительный"]));
+    rusQs.push(makeQ("В слове 'солнце' есть непроизносимая согласная?", "Да", ["Нет", "Иногда", "Только в стихах"]));
+    rusQs.push(makeQ("Как правильно: 'много (носки/носков)'?", "носков", ["носки", "носок", "носка"]));
+    rusQs.push(makeQ("Синоним слова 'красивый'", "прекрасный", ["ужасный", "грязный", "грустный"]));
+    rusQs.push(makeQ("Какая часть речи обозначает действие?", "Глагол", ["Существительное", "Прилагательное", "Наречие"]));
+    rusQs.push(makeQ("Как называется знак препинания в конце восклицательного предложения?", "Восклицательный", ["Точка", "Вопрос", "Многоточие"]));
+    rusQs.push(makeQ("Какое слово лишнее: 'радость, веселье, грусть, счастье'", "грусть", ["радость", "веселье", "счастье"]));
+    rusQs.push(makeQ("Как пишется 'не' с глаголами?", "Раздельно", ["Слитно", "Через дефис", "Вместе"]));
+    rusQs.push(makeQ("Какое слово является проверочным для 'л...сной'?", "лес", ["лиса", "лезть", "лесть"]));
+    rusQs.push(makeQ("Укажите слово с суффиксом -чик-", "лётчик", ["ключик", "мячик", "зайчик"]));
+    rusQs.push(makeQ("Какой корень в слове 'водитель'?", "вод", ["води", "ител", "водь"]));
+    rusQs.push(makeQ("Предложение, в котором есть две грамматические основы, называется", "Сложное", ["Простое", "Вопросительное", "Побудительное"]));
+    rusQs.push(makeQ("Выберите правильное написание: 'пол...жить'", "положить", ["полажить", "положить", "паложить"]));
+    rusQs.push(makeQ("Как называется раздел науки о языке, изучающий звуки?", "Фонетика", ["Лексика", "Морфология", "Синтаксис"]));
+    rusQs.push(makeQ("Сколько спряжений у глаголов в русском языке?", "2", ["1", "3", "4"]));
+    rusQs.push(makeQ("Какое местоимение относится к личным?", "он", ["кто", "мой", "этот"]));
+    rusQs.push(makeQ("В каком слове пишется Ь знак?", "ночь", ["ключ", "мяч", "луч"]));
+    rusQs.push(makeQ("Антоним слова 'высокий'", "низкий", ["длинный", "широкий", "глубокий"]));
+    subjectsData["Русский язык"] = rusQs;
+
+    // ---------- ЛОГИКА ----------
+    let logicQs = [];
+    logicQs.push(makeQ("Если 1=3, 2=3, 3=5, 4=4, то 5=?", "4", ["3", "5", "6"]));
+    logicQs.push(makeQ("Что тяжелее: 1 кг ваты или 1 кг железа?", "Одинаково", ["Вата", "Железо", "Не знаю"]));
+    logicQs.push(makeQ("Продолжи ряд: 2, 4, 8, 16, ...", "32", ["24", "30", "64"]));
+    logicQs.push(makeQ("Какое число лишнее: 3, 5, 7, 9, 11?", "9", ["3", "5", "7"]));
+    logicQs.push(makeQ("У отца Мэри 5 дочерей: Чичи, Чача, Чучу, Чече. Как зовут пятую?", "Мэри", ["Чичи", "Чече", "Чуче"]));
+    logicQs.push(makeQ("Если вы едите меня, я умираю. Если вы пьёте меня, я умираю. Кто я?", "Огонь", ["Вода", "Воздух", "Земля"]));
+    logicQs.push(makeQ("Что можно увидеть с закрытыми глазами?", "Сон", ["Тьму", "Свет", "Ничего"]));
+    logicQs.push(makeQ("Какое слово всегда произносится неправильно?", "Неправильно", ["Сложно", "Быстро", "Громко"]));
+    logicQs.push(makeQ("У человека 4 ноги утром, 2 днём, 3 вечером. Кто это?", "Человек (ребёнок, взрослый, с тростью)", ["Собака", "Лошадь", "Стол"]));
+    logicQs.push(makeQ("Что принадлежит вам, но другие используют это чаще?", "Имя", ["Дом", "Машина", "Телефон"]));
+    logicQs.push(makeQ("Если в 12 часов ночи идёт дождь, можно ли ожидать солнечную погоду через 72 часа?", "Нет (будет ночь)", ["Да", "Возможно", "Зависит"]));
+    logicQs.push(makeQ("У какого месяца 28 дней?", "У всех", ["Февраль", "Только февраль", "Апрель"]));
+    logicQs.push(makeQ("Что становится мокрым при высыхании?", "Полотенце", ["Вода", "Одежда", "Стекло"]));
+    logicQs.push(makeQ("Какой ключ не открывает замок?", "Скрипичный", ["Дверной", "Гаечный", "Автомобильный"]));
+    logicQs.push(makeQ("Сколько раз встречается цифра 9 от 1 до 100?", "20", ["19", "21", "18"]));
+    logicQs.push(makeQ("Что можно приготовить, но нельзя съесть?", "Уроки", ["Еду", "Салат", "Пирог"]));
+    logicQs.push(makeQ("В каком слове 7 букв 'о'?", "оборона", ["окно", "молоко", "болото"]));
+    logicQs.push(makeQ("Что идёт, не двигаясь с места?", "Время", ["Часы", "Тень", "Дорога"]));
+    logicQs.push(makeQ("Какое колесо не крутится при повороте направо?", "Запасное", ["Переднее", "Заднее", "Левое"]));
+    logicQs.push(makeQ("Какой месяц короче всех?", "Май (3 буквы)", ["Февраль", "Апрель", "Июнь"]));
+    subjectsData["Логика"] = logicQs;
+
+    // --------------------------------------------------------------
+    // Отрисовка главного меню
+    // --------------------------------------------------------------
+    const subjectsList = ["Математика", "Геометрия", "Физика", "Химия", "Биология", "География", "Информатика", "Английский язык", "Русский язык", "Логика"];
+    const icons = ["📐", "📏", "⚛️", "🧪", "🧬", "🌍", "💻", "🇬🇧", "📖", "🧩"];
+    const gridContainer = document.getElementById('subjectsGrid');
+
+    subjectsList.forEach((subject, idx) => {
+        const card = document.createElement('div');
+        card.className = 'subject-card';
+        card.innerHTML = `
+            <div class="card-icon">${icons[idx]}</div>
+            <h3>${subject}</h3>
+            <button class="start-btn" data-subject="${subject}">🚀 Начать тест</button>
+        `;
+        gridContainer.appendChild(card);
+    });
+
+    // --------------------------------------------------------------
+    // Логика викторины (с непредсказуемым порядком ответов)
+    // --------------------------------------------------------------
+    let currentSubject = "";
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let userAnswers = [];        // для каждого вопроса храним ВЫБРАННЫЙ ТЕКСТ ответа (строку)
+    let currentShuffledOptions = []; // для текущего вопроса: [{text, isCorrect}]
+    let isLocked = false;
+
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function generateShuffledOptions(q) {
+        let opts = [{ text: q.correct, isCorrect: true }];
+        q.wrong.forEach(w => opts.push({ text: w, isCorrect: false }));
+        return shuffleArray([...opts]);
+    }
+
+    function startQuiz(subject) {
+        currentSubject = subject;
+        currentQuestions = subjectsData[subject];
+        currentIndex = 0;
+        userAnswers = new Array(currentQuestions.length).fill(null);
+        isLocked = false;
+        document.getElementById('mainMenu').classList.add('hidden');
+        document.getElementById('quizArea').classList.remove('hidden');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = currentQuestions[currentIndex];
+        currentShuffledOptions = generateShuffledOptions(q);
+        const total = currentQuestions.length;
+        const quizDiv = document.getElementById('quizArea');
+        quizDiv.innerHTML = `
+            <div class="quiz-panel">
+                <div class="quiz-header">
+                    <span class="quiz-title">📚 ${currentSubject}</span>
+                    <span class="question-counter">Вопрос ${currentIndex+1} из ${total}</span>
+                </div>
+                <div class="question-text">${q.text}</div>
+                <div class="options-grid" id="optionsGrid"></div>
+                <div class="quiz-footer">
+                    <button class="btn-home" id="homeBtn">🏠 Главная</button>
+                    <button class="btn-next" id="nextBtn">➡ Далее</button>
+                </div>
+            </div>
+        `;
+        const optsGrid = document.getElementById('optionsGrid');
+        currentShuffledOptions.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option';
+            btn.innerText = opt.text;
+            btn.dataset.index = idx;
+            btn.addEventListener('click', () => handleAnswer(idx, btn));
+            optsGrid.appendChild(btn);
+        });
+
+        // Если уже отвечали на этот вопрос
+        if (userAnswers[currentIndex] !== null) {
+            const savedAnswerText = userAnswers[currentIndex];
+            const allBtns = document.querySelectorAll('.option');
+            allBtns.forEach((btn, i) => {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+                if (btn.innerText === savedAnswerText) {
+                    if (currentShuffledOptions[i].isCorrect) btn.classList.add('correct');
+                    else btn.classList.add('wrong');
+                }
+                if (currentShuffledOptions[i].isCorrect && btn.innerText !== savedAnswerText) {
+                    btn.classList.add('correct');
+                }
+            });
+            isLocked = true;
+        } else {
+            isLocked = false;
+        }
+
+        document.getElementById('homeBtn').onclick = () => backToMenu();
+        document.getElementById('nextBtn').onclick = () => {
+            if (userAnswers[currentIndex] === null) {
+                alert("Пожалуйста, выбери ответ!");
+                return;
+            }
+            if (currentIndex + 1 < total) {
+                currentIndex++;
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        };
+    }
+
+    function handleAnswer(selectedIdx, btnElement) {
+        if (isLocked) return;
+        const selectedText = currentShuffledOptions[selectedIdx].text;
+        userAnswers[currentIndex] = selectedText;
+        const allBtns = document.querySelectorAll('.option');
+        allBtns.forEach((btn, idx) => {
+            btn.disabled = true;
+            btn.classList.add('disabled');
+            if (idx === selectedIdx) {
+                if (currentShuffledOptions[idx].isCorrect) btn.classList.add('correct');
+                else btn.classList.add('wrong');
+            }
+            if (currentShuffledOptions[idx].isCorrect) {
+                btn.classList.add('correct');
+            }
+        });
+        isLocked = true;
+    }
+
+    function finishQuiz() {
+        let correctCount = 0;
+        for (let i = 0; i < currentQuestions.length; i++) {
+            const q = currentQuestions[i];
+            const userAnswerText = userAnswers[i];
+            if (userAnswerText === q.correct) {
+                correctCount++;
+            }
+        }
+        let message = "";
+        if (correctCount <= 10) message = "📖 Нужно подтянуть знания";
+        else if (correctCount <= 16) message = "👍 Хороший результат, так держать!";
+        else message = "🎉 Отлично! Ты настоящий эрудит!";
+        
+        const quizDiv = document.getElementById('quizArea');
+        quizDiv.innerHTML = `
+            <div class="quiz-panel result-box">
+                <div class="result-score">${correctCount} / 20</div>
+                <h3>${message}</h3>
+                <button class="btn-home" id="finalHomeBtn" style="margin-top: 1.5rem;">🏠 Вернуться на главную</button>
+            </div>
+        `;
+        document.getElementById('finalHomeBtn').onclick = () => backToMenu();
+    }
+
+    function backToMenu() {
+        document.getElementById('quizArea').classList.add('hidden');
+        document.getElementById('mainMenu').classList.remove('hidden');
+        currentSubject = "";
+        currentQuestions = [];
+        currentIndex = 0;
+        userAnswers = [];
+        isLocked = false;
+    }
+
+    // Делегирование старта
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('start-btn')) {
+            const subject = e.target.getAttribute('data-subject');
+            startQuiz(subject);
+        }
+    });
+
+    // --------------------------------------------------------------
+    // 12 отзывов учеников (без смайликов, только текст)
+    // --------------------------------------------------------------
+    const testimonialsArray = [
+        { text: "Очень крутой сайт! Вопросы интересные и не слишком лёгкие. Люблю готовиться здесь к контрольным.", name: "Арина, 8 класс" },
+        { text: "Тёмная тема — глаз не устаёт. Викторины по физике помогли мне лучше понять механику.", name: "Максим, 9 класс" },
+        { text: "Раньше скучал на уроках, а теперь с удовольствием прохожу тесты. Спасибо за логику!", name: "Тимур, 7 класс" },
+        { text: "Отличный дизайн и кнопки приятные. Английский стал учить веселее. Рекомендую друзьям.", name: "София, 10 класс" },
+        { text: "Очень удобно, что ответы перемешиваются — нельзя просто запомнить букву.", name: "Илья, 9 класс" },
+        { text: "Тесты по биологии помогли подготовиться к олимпиаде. Спасибо разработчикам!", name: "Анна, 11 класс" },
+        { text: "Информатика — топ! Вопросы про алгоритмы и компьютеры очень актуальны.", name: "Никита, 10 класс" },
+        { text: "Люблю географию, тут даже нашёл вопросы про страны, о которых не знал.", name: "Елизавета, 8 класс" },
+        { text: "Химия перестала быть скучной. Классные примеры и никакой воды.", name: "Даниил, 9 класс" },
+        { text: "Математика — моё слабое место, но здесь вопросы понятные и интересные.", name: "Валерия, 7 класс" },
+        { text: "Дизайн как в космосе, очень стильно. Побольше бы таких проектов!", name: "Арсений, 8 класс" },
+        { text: "Логические задачки заставляют думать нестандартно. Мой любимый предмет теперь!", name: "Полина, 10 класс" }
+    ];
+    const testimonialsContainer = document.getElementById('testimonialsList');
+    testimonialsArray.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'testimonial';
+        div.innerHTML = `<p>“${t.text}”</p><div class="author">— ${t.name}</div>`;
+        testimonialsContainer.appendChild(div);
+    });
+</script>
+</body>
+</html>
